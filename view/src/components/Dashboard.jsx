@@ -11,28 +11,34 @@ function Dashboard() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  useEffect(() => {
-    const getProtectedResource = async () => {
-      try {
-        const response = await fetch(
-          "http://localhost:3000/protected-resource"
-        );
+  const getProtectedResource = async (authHeaderStr) => {
+    try {
+      const response = authHeaderStr
+        ? await fetch("http://localhost:3000/protected-resource", {
+            headers: {
+              Authorization: authHeaderStr,
+            },
+          })
+        : await fetch("http://localhost:3000/protected-resource");
 
-        if (!response.ok) {
-          if (response.status === 401) {
-            throw new Error("Unauthorized request");
-          }
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("Unauthorized request");
         }
-        const data = await response.json();
-        console.log(data);
-      } catch (err) {
-        console.log(err.message);
-        if (err.message === "Unauthorized request") {
-          setAskForCredentials(true);
+        if (response.status === 500) {
+          throw new Error("Something went wrong.");
         }
       }
-    };
+      const data = await response.json();
+      setAskForCredentials(false);
+      setData(data.message);
+    } catch (err) {
+      setAskForCredentials(true);
+      setErrorMsg(err.message);
+    }
+  };
 
+  useEffect(() => {
     getProtectedResource();
   }, []);
 
@@ -50,36 +56,7 @@ function Dashboard() {
     e.preventDefault();
 
     const authHeaderStr = `Basic ${btoa(username)}:${btoa(password)}`;
-
-    const getProtectedResource = async () => {
-      try {
-        const response = await fetch(
-          "http://localhost:3000/protected-resource",
-          {
-            headers: {
-              Authorization: authHeaderStr,
-            },
-          }
-        );
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            throw new Error("Unauthorized request");
-          }
-          if (response.status === 500) {
-            throw new Error("Something went wrong.");
-          }
-        }
-        const data = await response.json();
-        setAskForCredentials(false);
-        setData(data.message);
-      } catch (err) {
-        setAskForCredentials(true);
-        setErrorMsg(err.message);
-      }
-    };
-
-    getProtectedResource();
+    getProtectedResource(authHeaderStr);
   };
 
   return (
