@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import styled from "styled-components";
 
@@ -14,12 +14,12 @@ function Dashboard() {
   const getProtectedResource = async (authHeaderStr) => {
     try {
       const response = authHeaderStr
-        ? await fetch("http://localhost:3000/protected-resource", {
+        ? await fetch("http://localhost:3000/api/user/protected-resource", {
             headers: {
               Authorization: authHeaderStr,
             },
           })
-        : await fetch("http://localhost:3000/protected-resource");
+        : await fetch("http://localhost:3000/api/user/protected-resource");
 
       if (!response.ok) {
         if (response.status === 401) {
@@ -37,10 +37,6 @@ function Dashboard() {
       setErrorMsg(err.message);
     }
   };
-
-  useEffect(() => {
-    getProtectedResource();
-  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -67,7 +63,7 @@ function Dashboard() {
         it.
       </p>
       {data && <ProtectedText>{data}</ProtectedText>}
-      {askForCredentials && (
+      {!data && !askForCredentials && (
         <>
           <LoginForm onSubmit={handleSubmit}>
             <LoginFormHeader>Login</LoginFormHeader>
